@@ -18,3 +18,4 @@ for ext in t.extensions :
     logging.info('Found extension name={0} type={1}'.format(ext.name, ext.type_))
     for he in ext.header :
         logging.info('{0:>8} = {1:<20} / {2}'.format(he.key, he.value, he.comment))
+    ext.data = evlio.template.FITSDataTable(t.extensions[1].header)

@@ -103,6 +103,64 @@ class FITSHeader(list) :
     """Data class of a FITS file header."""
 
 #---------------------------------------------------------------------------
+class FITSData(object) :
+
+    """Base data class of FITS file data."""
+
+    def _init_from_header(self, header) :
+        logging.warning('FITSData._init_from_header should not be called.')
+
+    def _header_to_dict(self, header) :
+        headerdict = {}
+        for he in header :
+            headerdict[he.key] = he
+        return headerdict
+
+#---------------------------------------------------------------------------
+class FITSDataTable(FITSData) :
+
+    """Data class for FITS file table data."""
+
+    def __init__(self, header) :
+        self._init_from_header(header)
+
+    def _init_from_header(self, header) :
+        self.columns = []
+        hd = super(FITSDataTable, self)._header_to_dict(header)
+        hdkeys = hd.keys()
+        idx = 1
+        while 1 :
+            typestr = 'TTYPE{0}'.format(idx)
+            formstr = 'TFORM{0}'.format(idx)
+            if typestr in hdkeys and formstr in hdkeys :
+                self.columns.append(
+                    FITSDataTableColumn(
+                        hd[typestr].value,
+                        hd[formstr].value
+                        )
+                    )
+                tdict = {'TUNIT':'unit', 'TNULL': 'null', 'TSCAL': 'scale', 'TZERO': 'zero',
+                         'TDISP': 'disp', 'TBCOL': 'bcol', 'TDIM' : 'tdim'}
+                for key, prop in tdict.items() :
+                    propstr = (key + '{0}').format(idx)
+                    if propstr in hdkeys :
+                        setattr(self.columns[-1], prop, hd[propstr])
+            else :
+                break
+            idx += 1
+
+#---------------------------------------------------------------------------
+class FITSDataTableColumn(object) :
+
+    """Data class for FITS file table data."""
+
+    def __init__(self, type_, form, unit=None, null=None,
+                 zero=None, disp=None, bcol=None, dim=None) :
+        props = ['type_', 'form', 'unit', 'null', 'zero', 'disp', 'bcol', 'dim']
+        for p in props :
+            setattr(self, p, eval(p))
+
+#---------------------------------------------------------------------------
 class FITSExtension(object) :
 
     """Data class of a FITS file extension."""
