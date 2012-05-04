@@ -2,15 +2,16 @@ import sys
 import os
 import logging
 
-# Add script parent directory to python search path to get access to the pyfact package
+# Add script parent directory to python search path to get access to the evlio package
 sys.path.append(os.path.abspath(sys.path[0].rsplit('/', 1)[0]))
+import evlio
 import evlio.template
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
-t = evlio.template.FITSFileTemplate('templates/v1.0.0/EventList.tpl', True)
+t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/v1.0.0/EventList.tpl', True)
 
 for ext in t.extensions :
     logging.info('--------------------------------------------------------------------')
