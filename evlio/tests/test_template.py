@@ -27,7 +27,11 @@
 #===========================================================================
 # Imports
 
+import os
+
 from .. import template
+
+PATH = os.path.dirname(os.path.abspath(__file__))
 
 #===========================================================================
 # Main
@@ -53,15 +57,15 @@ class TestFITSHeaderEntry() :
 
     def test_parse_extra_properties(self) :
         fh = template.FITSHeaderEntry(comment='comment1 {tt=tt}',
-                                      parse_extra_properties=True)
+                                      parse_options=True)
         assert fh.comment == 'comment1'
-        assert fh.tt == 'tt'
+        assert fh.options['tt'] == 'tt'
         fh = template.FITSHeaderEntry(comment='comment1 comment2 {t1=v1,t2=v2, t3=v3}',
-                                      parse_extra_properties=True)
+                                      parse_options=True)
         assert fh.comment == 'comment1 comment2'
-        assert fh.t1 == 'v1'
-        assert fh.t2 == 'v2'
-        assert fh.t3 == 'v3'
+        assert fh.options['t1'] == 'v1'
+        assert fh.options['t2'] == 'v2'
+        assert fh.options['t3'] == 'v3'
 
 class TestFITSExtension() :
     """Test FITSHeaderEntry class"""
@@ -80,5 +84,15 @@ class TestFITSExtension() :
         assert fe.bitpix == 'val3'
         assert fe.naxis == 'val4'
 
+class TestFITSFileTemplate() :
+    """Test FITSFileTemplate class"""
+    tpl = template.FITSFileTemplate(PATH + '/dummy.tpl', True)
+    assert len(tpl.extensions) == 2
+    assert len(tpl.extensions[1].header) == 63
+    assert tpl.extensions[1].header[62].key == 'TUNIT20'
+    assert tpl.extensions[1].header[62].value == 'TeV'
+    assert tpl.extensions[1].header[1].options['mapto'] == 'v1'
+    assert tpl.extensions[1].header[1].options['color'] == 'green'
+    
 #===========================================================================
 #===========================================================================

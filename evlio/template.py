@@ -39,7 +39,7 @@ _FITS_TEMPLATE_LINE_RE = re.compile(r'(?:^        (?P<is_comment>.+))?\s*(?P<key
 # Check FITS header keyword for being a table description
 _IS_TABLE_KW_RE = re.compile(r'(?P<table_kw>TTYPE|TFORM|TUNIT|TNULL|TSCAL|TZERO|TDISP|TBCOL|TDIM)(?P<auto_index>\#)?')
 # Parses extra properties from a FITS header comment
-_EXTRA_PROPERTIES_RE = re.compile(r'(?P<std>.+)?\{(?P<extra>(?:\w+=\w+,?\s*)+)\}')
+_FITS_HEADER_ENTRY_OPTIONS_RE = re.compile(r'(?P<comment>.+)?\{(?P<options>(?:\w+=\w+,?\s*)+)\}')
 # Determines type of a FITS header value
 _ENTRY_VALUE_TYPE = re.compile(r'(?P<int>^[0-9]+$)?(?P<float>^[-+]?(?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+\.?[0-9]*[eE][+-]?[0-9]+)|(?:[0-9]*\.?[0-9]+[eE][+-]?[0-9]+))?')
 
@@ -57,15 +57,15 @@ class FITSHeaderEntry(object) :
     """Data class of a FITS file header entry."""
 
     def __init__(self, key=None, value=None, comment=None,
-                 parse_value=False, parse_extra_properties=False) :
+                 parse_value=False, parse_options=False) :
         self.key = key
         if parse_value :
             self.value = self._parse_value(value)
         else :
             self.value = value
-        self._parse_extra_properties = parse_extra_properties
-        if comment and parse_extra_properties :
-            self._do_parse_extra_properties(comment)
+        self._parse_options = parse_options
+        if comment and parse_options :
+            self._do_parse_options(comment)
         else :
             self.comment = comment
 
@@ -80,22 +80,23 @@ class FITSHeaderEntry(object) :
         else :
             return value
 
-    def _do_parse_extra_properties(self, comment) :
+    def _do_parse_options(self, comment) :
         """
-        Parse object extra properties from comment.
+        Parse options from comment.
 
-        Add additional properties to the object extracted from the comment.
+        Add additional options in a dictionary extracted from the comment.
         Property format is '{key1=value1,key2=value2, ...}'. All values are
         stored as strings.
         """
         self._orig_comment = comment
-        m = _EXTRA_PROPERTIES_RE.match(comment)
+        m = _FITS_HEADER_ENTRY_OPTIONS_RE.match(comment)
         if m :
-            if m.group('extra') :
-                for s in m.group('extra').split(',') :
+            self.options = {}
+            if m.group('options') :
+                for s in m.group('options').split(',') :
                     prop, val = s.strip().split('=')
-                    setattr(self, prop, val)
-            self.comment = m.group('std').strip()
+                    self.options[prop] = val
+            self.comment = m.group('comment').strip()
         else :
             self.comment = comment
             
@@ -124,10 +125,10 @@ class FITSDataTable(FITSData) :
 
     """Data class for FITS file table data."""
 
-    def __init__(self, header) :
+    def __init__(self, header, parse_options=False) :
         self._init_from_header(header)
 
-    def _init_from_header(self, header) :
+    def _init_from_header(self, header, parse_options=False) :
         self.columns = []
         hd = super(FITSDataTable, self)._header_to_dict(header)
         hdkeys = hd.keys()
@@ -148,6 +149,8 @@ class FITSDataTable(FITSData) :
                     propstr = (key + '{0}').format(idx)
                     if propstr in hdkeys :
                         setattr(self.columns[-1], prop, hd[propstr])
+                if parse_options and hasattr(hd[typestr], 'options'):
+                    self.columns[-1].options = hd[typestr].options
             else :
                 break
             idx += 1
@@ -202,12 +205,12 @@ class FITSFileTemplate(object) :
     -----
     http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node105.html
     """
-    def __init__(self, filename, parse_extra_properties=False) :
+    def __init__(self, filename, parse_options=False) :
         self.filename_dir, self.filename_base = os.path.split(filename)
         self.extensions = None
         self._auto_index = 0
         self._auto_index_key = None
-        self._parse_extra_properties = parse_extra_properties
+        self._parse_options = parse_options
         self._file_recursion_depth = 0
         self._parse_file(filename)
         [ext.init_from_header(ext.header) for ext in self.extensions]
@@ -278,7 +281,7 @@ class FITSFileTemplate(object) :
                         FITSHeaderEntry(key=key, value=value,
                                         comment = m.group('comment'),
                                         parse_value=True,
-                                        parse_extra_properties=self._parse_extra_properties)
+                                        parse_options=self._parse_options)
                         )
                     logging.debug('{0:>8} = {1:<20} / {2}'.format(key, m.group('value'), m.group('comment')))
 

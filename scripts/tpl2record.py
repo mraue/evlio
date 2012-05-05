@@ -69,7 +69,7 @@ t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/v1.0.0/EventLi
 for ext in t.extensions :
     if ext.name == None :
         continue
-    ext.data = evlio.template.FITSDataTable(ext.header)
+    ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
     if ext.data.columns :
         initstr, memberstr = '', ''
         for col in ext.data.columns :
