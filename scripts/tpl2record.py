@@ -44,7 +44,7 @@ FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool'
                                     'U': 'unsigned short', 'J': 'int', 'V': 'unsigned int',
                                     'K': 'long', 'E': 'float', 'D': 'double', }
 
-RECORD_STRUCT_BEGIN = '''
+FITS_REC_STRUCT = '''
   struct FITSRecord{0} : public FITSRecord {{
 
     FITSRecord{0}(std::string filename, std::string templatename, int ntels=256)
@@ -52,12 +52,14 @@ RECORD_STRUCT_BEGIN = '''
     {{
 
       setVerbose(1);
+
+{1}
+    }}
+
+{2}
+  }};
 '''
-RECORD_STRUCT_END = '''
-    }
-'''
-RECORD_STRUCT_COL_ENTRY =  '''      mapColumnToVar( "{0}", {1} );
-      {2} {1};'''
+
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
@@ -69,16 +71,19 @@ for ext in t.extensions :
         continue
     ext.data = evlio.template.FITSDataTable(ext.header)
     if ext.data.columns :
-        print RECORD_STRUCT_BEGIN.format(ext.name)
+        initstr, memberstr = '', ''
         for col in ext.data.columns :
             m = TABLE_FORMAT_RE.match(col.form)
             if (col.type_ and col.form and m and m.group('form') and
                 m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
-                print RECORD_STRUCT_COL_ENTRY.format(col.type_, col.type_.lower(),
-                                                     FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')])
+                initstr += '      mapColumnToVar( "{0}", {1} );\n'.format(col.type_, col.type_.lower())
+                memberstr += '    {0} {1};\n'.format(FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')],
+                                                       col.type_.lower())
             else :
-                logging.warning('Could not create record entry from column {0} in extension {1}'.format(col.type_, ext.name))
-        print RECORD_STRUCT_END
+                logging.warning(
+                    'Could not create record entry from column {0} in extension {1}'.format(col.type_, ext.name)
+                    )
+        print FITS_REC_STRUCT.format(ext.name, initstr, memberstr)
 
 #    for he in ext.header :
 #        if not evlio.template._IS_TABLE_KW_RE.match(he.key) :
