@@ -45,9 +45,9 @@ FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool'
                                     'K': 'long', 'E': 'float', 'D': 'double', }
 
 RECORD_STRUCT_BEGIN = '''
-  struct {0}FITSRecord : public FITSRecord {{
+  struct FITSRecord{0} : public FITSRecord {{
 
-    EventListFITSRecord(std::string filename, std::string templatename, int ntels=256)
+    FITSRecord{0}(std::string filename, std::string templatename, int ntels=256)
       : FITSRecord( filename, templatename, "{0}" ), nTels(ntels)
     {{
 
