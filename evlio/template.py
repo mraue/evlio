@@ -283,7 +283,8 @@ class FITSFileTemplate(object) :
                                         parse_value=True,
                                         parse_options=self._parse_options)
                         )
-                    logging.debug('{0:>8} = {1:<20} / {2}'.format(key, m.group('value'), m.group('comment')))
+                    logging.debug('{0:>8} = {1:<20} / {2}'.format(key, m.group('value'),
+                                                                  m.group('comment')))
 
 #===========================================================================
 #===========================================================================

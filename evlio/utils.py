@@ -48,11 +48,12 @@ def get_tpls_as_dict(path=evlio.BASE_PATH + '/templates') :
     """ Reads the content of the templates/ directory in a dictionary."""
     tpls = {}
     for d1 in glob.iglob(path + '/*') :
-        vers = {}
-        tpls[d1.split('/')[-1]] = vers
-        for d2 in glob.iglob(d1 + '/*') :
-            if os.path.isdir(d2) :
-                vers[d2.split('/')[-1]] = [os.path.basename(s) for s in glob.glob(d2 + '/*')]
+        if os.path.isdir(d1) :
+            vers = {}
+            tpls[d1.split('/')[-1]] = vers
+            for d2 in glob.iglob(d1 + '/*') :
+                if os.path.isdir(d2) :
+                    vers[d2.split('/')[-1]] = [os.path.basename(s) for s in glob.glob(d2 + '/*')]
     return tpls
 
 #===========================================================================
