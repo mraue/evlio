@@ -13,6 +13,7 @@ Contents:
 
    development
    evlio.template
+   evlio.utils
 
 
 Indices and tables
