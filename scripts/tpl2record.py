@@ -59,31 +59,52 @@ FITS_REC_STRUCT = '''
 {2}
   }};
 '''
+FITS_EXTRAREC_STRUCT = '''
+  struct ExtraRec{0}  : public ExtraRec {{
+
+    ExtraRec{0}( FITSRecord &baserec ) : ExtraRec(baserec) {{
+
+{1}
+    }}
+  
+{2}
+  }};
+'''
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
-t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/v1.0.0/EventList.tpl', True)
+t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/evl/1.0.0/EventList.tpl', True)
 
 for ext in t.extensions :
     if ext.name == None :
         continue
     ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
     if ext.data.columns :
+        extrarec = ''
+        if (hasattr(ext, 'options') and
+            'type' in ext.options.keys() and
+            ext.options['type'] == 'extrarec') :
+            extrarec = 'baserec.'
         initstr, memberstr = '', ''
         for col in ext.data.columns :
             m = TABLE_FORMAT_RE.match(col.form)
             if (col.type_ and col.form and m and m.group('form') and
                 m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
-                initstr += '      mapColumnToVar( "{0}", {1} );\n'.format(col.type_, col.type_.lower())
+                initstr += '      {2}mapColumnToVar( "{0}", {1} );\n'.format(col.type_,
+                                                                             col.type_.lower(),
+                                                                             extrarec)
                 memberstr += '    {0} {1};\n'.format(FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')],
                                                        col.type_.lower())
             else :
                 logging.warning(
                     'Could not create record entry from column {0} in extension {1}'.format(col.type_, ext.name)
                     )
-        print FITS_REC_STRUCT.format(ext.name, initstr, memberstr)
+        if extrarec == '' :
+            print FITS_REC_STRUCT.format(ext.name, initstr, memberstr)
+        else :
+            print FITS_EXTRAREC_STRUCT.format(ext.name, initstr, memberstr)
 
 #    for he in ext.header :
 #        if not evlio.template._IS_TABLE_KW_RE.match(he.key) :

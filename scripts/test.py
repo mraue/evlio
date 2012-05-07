@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%Y-%m-%d %H:%M:%S')
 
-t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/v1.0.0/EventList.tpl', True)
+t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/evl/1.0.0/EventList.tpl', True)
 
 for ext in t.extensions :
     logging.info('--------------------------------------------------------------------')
