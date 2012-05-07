@@ -95,8 +95,11 @@ for ext in t.extensions :
                 initstr += '      {2}mapColumnToVar( "{0}", {1} );\n'.format(col.type_,
                                                                              col.type_.lower(),
                                                                              extrarec)
-                memberstr += '    {0} {1};\n'.format(FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')],
-                                                       col.type_.lower())
+                memberstr += '    {0} {1};'.format(FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')],
+                                                   col.type_.lower())
+                if col.unit :
+                    memberstr += '// [{0}]'.format(col.unit)
+                memberstr += '\n'
             else :
                 logging.warning(
                     'Could not create record entry from column {0} in extension {1}'.format(col.type_, ext.name)

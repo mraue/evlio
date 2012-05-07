@@ -172,7 +172,7 @@ class FITSDataTable(FITSData) :
                 for key, prop in tdict.items() :
                     propstr = (key + '{0}').format(idx)
                     if propstr in hdkeys :
-                        setattr(self.columns[-1], prop, hd[propstr])
+                        setattr(self.columns[-1], prop, hd[propstr].value)
                 if parse_options and hasattr(hd[typestr], 'options'):
                     self.columns[-1].options = hd[typestr].options
             else :
