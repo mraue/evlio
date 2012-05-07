@@ -53,8 +53,25 @@ _MAX_FILE_RECURSION_DEPTH = 5
 
 #---------------------------------------------------------------------------
 class FITSHeaderEntry(object) :
+    """
+    Data class of a FITS file header entry.
 
-    """Data class of a FITS file header entry."""
+    Attributes
+    ----------
+    key : str
+        FITS header entry key.
+    value : str, (int, float)
+        FITS header entry value.
+    comment : str
+        FITS header entry comment.
+    options : dict, optional
+        Additional options parsed from the comment.
+    parse_value : bool
+        Parse value into python type.
+    parse_options : bool
+        Parse options from comment string. Options format is '{key1=val1,key2=val2,..}.\
+        They are stored in the options attribute as dictionary.
+    """
 
     def __init__(self, key=None, value=None, comment=None,
                  parse_value=False, parse_options=False) :
@@ -108,8 +125,9 @@ class FITSHeader(list) :
 
 #---------------------------------------------------------------------------
 class FITSData(object) :
-
-    """Base data class of FITS file data."""
+    """
+    Base data class of FITS file data.    
+    """
 
     def _init_from_header(self, header) :
         logging.warning('FITSData._init_from_header should not be called.')
@@ -122,8 +140,14 @@ class FITSData(object) :
 
 #---------------------------------------------------------------------------
 class FITSDataTable(FITSData) :
+    """
+    Data class for FITS file table data.
 
-    """Data class for FITS file table data."""
+    Attributes
+    ----------
+    columns : list
+        List of FITSDataTableColumns.
+    """
 
     def __init__(self, header, parse_options=False) :
         self._init_from_header(header)
@@ -157,8 +181,9 @@ class FITSDataTable(FITSData) :
 
 #---------------------------------------------------------------------------
 class FITSDataTableColumn(object) :
-
-    """Data class for FITS file table data."""
+    """
+    Data class for FITS file table data.
+    """
 
     def __init__(self, type_, form, unit=None, null=None,
                  zero=None, disp=None, bcol=None, dim=None) :
@@ -168,8 +193,23 @@ class FITSDataTableColumn(object) :
 
 #---------------------------------------------------------------------------
 class FITSExtension(object) :
+    """
+    Data class of a FITS file extension.
 
-    """Data class of a FITS file extension."""
+    Attributes
+    ----------
+    type\_ : str
+        Taken from EXTENSION/XTENSION header keyword.
+    name : str
+        Taken from EXTNAME header keyword.
+    bitpix : str
+        Taken from BITPIX header keyword.
+    naxis : str
+        Taken from NAXIS header keyword.
+    header : list
+        FITSHeader.
+    data : FITSData(Table/Image)
+    """
 
     def __init__(self, type_=None, name=None, bitpix=None, naxis=None, header=None, data=None) :
         self.type_ = type_
