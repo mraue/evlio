@@ -4,7 +4,7 @@ DIRS	= src
 
 all :
 	$(ECHO) '==> Running python scripts.'
-	$(PYTHON) ./scripts/tpl2record.py
+	$(PYTHON) ./scripts/tpl2record.py > src/Records_test.hh
 	$(ECHO) '==> DONE'
 	$(ECHO) '==> Checking subdirectories.'
 	-for d in $(DIRS); do ($(ECHO) '--> Looking into directory' $$d; cd $$d; $(MAKE) $(MFLAGS) ); done
