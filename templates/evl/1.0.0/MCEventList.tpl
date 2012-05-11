@@ -13,7 +13,7 @@ EXTEND = T
 # ======================================================================
 #
 XTENSION =   BINTABLE     / Binary table extension
-EXTNAME  =   EVENTS       / Extension name
+EXTNAME  =   MCEVENTS       / Extension name
 \include cta-run-header.inc
 \include cta-event-base.inc
 \include cta-event-hillas.inc

@@ -3,10 +3,10 @@ include Makefile.inc
 DIRS	= src
 
 all :
-	$(ECHO) '==> Running python scripts.'
+	$(ECHO) '==> Running python scripts ..'
 	$(PYTHON) ./scripts/create_records.py
-	$(ECHO) '==> DONE'
-	$(ECHO) '==> Checking subdirectories.'
+	$(ECHO) '==> done.'
+	$(ECHO) '==> Checking subdirectories ..'
 	-for d in $(DIRS); do ($(ECHO) '--> Looking into directory' $$d; cd $$d; $(MAKE) $(MFLAGS) ); done
 
 clean :

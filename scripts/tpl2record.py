@@ -75,10 +75,17 @@ def tpl2record(input_file, output_file=None, loglevel='INFO') :
         outstream = open(output_file, 'w')
 
     # Loop over extensions and print out FITSRecord structs
+    ext_added = []
     for ext in t.extensions :
         # Better skip extensions of unknown type
         if ext.name == None :
             continue
+        # Check if FITSRecord for extensions has already been created
+        if ext.name in ext_added :
+            logging.warning('Extension ' + ext.name + ' already added to FITSRecord. Skipping entry.')
+            continue
+        else :
+            ext_added.append(ext.name)
         # Parse FITS header into FITSDataTables
         ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
         if ext.data.columns :
