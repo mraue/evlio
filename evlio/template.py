@@ -168,8 +168,8 @@ class FITSDataTable(FITSData) :
         hdkeys = hd.keys()
         idx = 1
         while 1 :
-            typestr = 'TTYPE{0}'.format(idx)
-            formstr = 'TFORM{0}'.format(idx)
+            typestr = 'TTYPE' + str(idx)
+            formstr = 'TFORM' + str(idx)
             if typestr in hdkeys and formstr in hdkeys :
                 self.columns.append(
                     FITSDataTableColumn(
@@ -180,7 +180,7 @@ class FITSDataTable(FITSData) :
                 tdict = {'TUNIT':'unit', 'TNULL': 'null', 'TSCAL': 'scale', 'TZERO': 'zero',
                          'TDISP': 'disp', 'TBCOL': 'bcol', 'TDIM' : 'tdim'}
                 for key, prop in tdict.items() :
-                    propstr = (key + '{0}').format(idx)
+                    propstr = key + str(idx)
                     if propstr in hdkeys :
                         setattr(self.columns[-1], prop, hd[propstr].value)
                 if parse_options and hasattr(hd[typestr], 'options'):
@@ -289,7 +289,7 @@ class FITSFileTemplate(object) :
         # Check recursion depth
         self._file_recursion_depth += 1
         if self._file_recursion_depth > _MAX_FILE_RECURSION_DEPTH :
-            logging.error('Maximum file recursion depth is reached ({0})'.format(_MAX_FILE_RECURSION_DEPTH))
+            logging.error('Maximum file recursion depth is reached (' + str(_MAX_FILE_RECURSION_DEPTH) + ')')
             return
         f = open(filename)
         for l in f :
@@ -329,7 +329,7 @@ class FITSFileTemplate(object) :
                                                          naxis=0, header=FITSHeader())]
                     # Verify key length
                     if len(key) > 8 :
-                        logging.warning('Key too long (more then 8 characters): {0}'.format(key))
+                        logging.warning('Key too long (more then 8 characters): ' + key)
                     if key == 'XTENSION' :
                         # Add new extension
                         self.extensions.append(FITSExtension(type_='value', header=FITSHeader()))
@@ -352,8 +352,7 @@ class FITSFileTemplate(object) :
                                         parse_value=True,
                                         parse_options=self._parse_options)
                         )
-                    logging.debug('{0:>8} = {1:<20} / {2}'.format(key, m.group('value'),
-                                                                  m.group('comment')))
+                    logging.debug(str(key) + ' = ' +  str(m.group('value')) + ' / ' + str(m.group('comment')))
 
 #===========================================================================
 #===========================================================================
