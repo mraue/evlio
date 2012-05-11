@@ -66,15 +66,25 @@ class FITSHeaderEntry(object) :
         FITS header entry comment.
     options : dict, optional
         Additional options parsed from the comment.
-    parse_value : bool
-        Parse value into python type.
-    parse_options : bool
-        Parse options from comment string. Options format is '{key1=val1,key2=val2,..}.\
-        They are stored in the options attribute as dictionary.
     """
 
     def __init__(self, key=None, value=None, comment=None,
                  parse_value=False, parse_options=False) :
+        """
+        Parameters
+        ----------
+        key : str
+            FITS header entry key.
+        value : str, (int, float)
+            FITS header entry value.
+        comment : str
+            FITS header entry comment.
+        parse_value : bool
+            Parse value into python type.
+        parse_options : bool
+            Parse options from comment string. Options format is '{key1=val1,key2=val2,..}.\
+            They are stored in the options attribute as dictionary.
+        """
         self.key = key
         if parse_value :
             self.value = self._parse_value(value)
@@ -182,7 +192,26 @@ class FITSDataTable(FITSData) :
 #---------------------------------------------------------------------------
 class FITSDataTableColumn(object) :
     """
-    Data class for FITS file table data.
+    Data class for FITS file table column.
+
+    Attributes
+    ----------
+    type_ : str
+        Corresponds to the TTYPE keyword of the table.
+    form : str
+        Corresponds to the TFORM keyword of the table.
+    unit : str
+        Corresponds to the TUNIT keyword of the table.
+    null : str, int, float
+        Corresponds to the TNULL keyword of the table.
+    zero : str, int, float
+        Corresponds to the TZERO keyword of the table.
+    disp : str
+        Corresponds to the TDISP keyword of the table.
+    bcol : str
+        Corresponds to the TBCOL keyword of the table.
+    dim : str, int
+        Corresponds to the TDIM keyword of the table.
     """
 
     def __init__(self, type_, form, unit=None, null=None,

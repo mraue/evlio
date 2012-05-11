@@ -4,7 +4,8 @@ import logging
 import re
 
 # Add script parent directory to python search path to get access to the evlio package
-sys.path.append(os.path.abspath(sys.path[0].rsplit('/', 1)[0]))
+sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/..'))
+
 import evlio
 import evlio.template
 
@@ -43,71 +44,67 @@ FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool'
                                     'B': 'unsigned char', 'S': 'char', 'I': 'short',
                                     'U': 'unsigned short', 'J': 'int', 'V': 'unsigned int',
                                     'K': 'long', 'E': 'float', 'D': 'double', }
+DATA_REC_STRUCT = [
+    '  struct rdata_', ' {\n', '\n  };\n\n'
+    ]
+FITS_REC_STRUCT = [
+    '  struct FITSRecord',
+    ''' : public FITSRecord {
 
-FITS_REC_STRUCT = '''
-  struct FITSRecord{0} : public FITSRecord {{
+    FITSRecord''',
+    '''(std::string filename, std::string templatename, int ntels=256)
+      : FITSRecord( filename, templatename, "''','''" ), nTels(ntels)
+    {\n\n''', '    }\n\n  rdata_', ' data;\n\n  };\n\n'
+    ]
 
-    FITSRecord{0}(std::string filename, std::string templatename, int ntels=256)
-      : FITSRecord( filename, templatename, "{0}" ), nTels(ntels)
-    {{
+def tpl2record(input_file, output_file=None, loglevel='INFO') :
+    # Configure logging
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError('Invalid log level: %s' % loglevel)
+    logging.basicConfig(level=numeric_level,
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
 
-      setVerbose(1);
+    # Open and parse FITS tpl file
+    #t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/evl/1.0.0/EventList.tpl', True)
+    t = evlio.template.FITSFileTemplate(input_file, True)
 
-{1}
-    }}
+    outstream = sys.stdout
+    if output_file :
+        outstream = open(output_file, 'w')
 
-{2}
-  }};
-'''
-FITS_EXTRAREC_STRUCT = '''
-  struct ExtraRec{0}  : public ExtraRec {{
-
-    ExtraRec{0}( FITSRecord &baserec ) : ExtraRec(baserec) {{
-
-{1}
-    }}
-  
-{2}
-  }};
-'''
-
-logging.basicConfig(level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
-
-t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/evl/1.0.0/EventList.tpl', True)
-
-for ext in t.extensions :
-    if ext.name == None :
-        continue
-    ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
-    if ext.data.columns :
-        extrarec = ''
-        if (hasattr(ext, 'options') and
-            'type' in ext.options.keys() and
-            ext.options['type'] == 'extrarec') :
-            extrarec = 'baserec.'
-        initstr, memberstr = '', ''
-        for col in ext.data.columns :
-            m = TABLE_FORMAT_RE.match(col.form)
-            if (col.type_ and col.form and m and m.group('form') and
-                m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
-                initstr += '      {2}mapColumnToVar( "{0}", {1} );\n'.format(col.type_,
-                                                                             col.type_.lower(),
-                                                                             extrarec)
-                memberstr += '    {0} {1};'.format(FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')],
-                                                   col.type_.lower())
-                if col.unit :
-                    memberstr += '// [{0}]'.format(col.unit)
-                memberstr += '\n'
-            else :
-                logging.warning(
-                    'Could not create record entry from column {0} in extension {1}'.format(col.type_, ext.name)
-                    )
-        if extrarec == '' :
-            print FITS_REC_STRUCT.format(ext.name, initstr, memberstr)
-        else :
-            print FITS_EXTRAREC_STRUCT.format(ext.name, initstr, memberstr)
+    # Loop over extensions and print out FITSRecord structs
+    for ext in t.extensions :
+        # Better skip extensions of unknown type
+        if ext.name == None :
+            continue
+        # Parse FITS header into FITSDataTables
+        ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
+        if ext.data.columns :
+            initstr, memberstr = '', ''
+            for col in ext.data.columns :
+                m = TABLE_FORMAT_RE.match(col.form)
+                if (col.type_ and col.form and m and m.group('form') and
+                    m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
+                    initstr += ('      mapColumnToVar( "' + col.type_
+                                + '", data.' + col.type_.lower() + ');\n')
+                    memberstr += ('    ' + FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')]
+                                  + ' ' + col.type_.lower() + ';')
+                    # Add unit as comment
+                    if col.unit :
+                        memberstr += ' // [' + col.unit + ']'
+                    memberstr += '\n'
+                else :
+                    logging.warning(
+                        'Could not create record entry from column ' + col.type_
+                        + ' in extension ' + ext.name
+                        )
+            outstream.write(DATA_REC_STRUCT[0] + ext.name.lower() + DATA_REC_STRUCT[1]
+                            + memberstr + DATA_REC_STRUCT[2])
+            outstream.write(FITS_REC_STRUCT[0] + ext.name + FITS_REC_STRUCT[1] + ext.name
+                            + FITS_REC_STRUCT[2] + ext.name + FITS_REC_STRUCT[3] + initstr
+                            + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5])
 
 #    for he in ext.header :
 #        if not evlio.template._IS_TABLE_KW_RE.match(he.key) :
@@ -117,3 +114,37 @@ for ext in t.extensions :
 #            elif type(he.value) is int :
 #                type_ = r'int'
 #            print type_, he.key.lower(), ';'
+
+if __name__ == '__main__' :
+    # We should switch to argparse soon (python v2.7++)
+    # http://docs.python.org/library/argparse.html#module-argparse
+    import optparse
+    parser = optparse.OptionParser(
+        usage='%prog [options] <tplfile>',
+        description='Converts a fitsio tpl file into structs for FITSRecord.'
+    )
+    parser.add_option(
+        '-o','--output-file',
+        dest='output_file',
+        type='str',
+        default=None,
+        help='Write output to file [default: %default].'
+    )
+    parser.add_option(
+        '-l','--log-level',
+        dest='loglevel',
+        default='INFO',
+        help='Amount of logging e.g. DEBUG, INFO, WARNING, ERROR [default: %default]'
+    )
+
+    options, args = parser.parse_args()
+
+    if len(args) == 1 :
+        tpl2record(
+            input_file=args[0],
+            output_file=options.output_file,
+            loglevel=options.loglevel
+            )
+    else :
+        parser.print_help()
+    
