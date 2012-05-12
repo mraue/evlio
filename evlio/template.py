@@ -41,7 +41,7 @@ _IS_TABLE_KW_RE = re.compile(r'(?P<table_kw>TTYPE|TFORM|TUNIT|TNULL|TSCAL|TZERO|
 # Parses extra properties from a FITS header comment
 _FITS_HEADER_ENTRY_OPTIONS_RE = re.compile(r'(?P<comment>.+)?\{(?P<options>(?:\w+=\w+,?\s*)+)\}')
 # Determines type of a FITS header value
-_ENTRY_VALUE_TYPE = re.compile(r'(?P<int>^[0-9]+$)?(?P<float>^[-+]?(?:[0-9]+\.[0-9]*)|(?:[0-9]*\.[0-9]+)|(?:[0-9]+\.?[0-9]*[eE][+-]?[0-9]+)|(?:[0-9]*\.?[0-9]+[eE][+-]?[0-9]+))?')
+_ENTRY_VALUE_TYPE = re.compile(r'(?P<int>^[0-9]+$)?(?P<float>^[-+]?(?:^[0-9]+\.[0-9]*$)|(?:[0-9]*\.[0-9]+$)|(?:[0-9]+\.?[0-9]*[eE][+-]?[0-9]+$)|(?:[0-9]*\.?[0-9]+[eE][+-]?[0-9]+$))?')
 
 #===========================================================================
 # Constants
