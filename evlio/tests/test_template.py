@@ -54,6 +54,8 @@ class TestFITSHeaderEntry() :
         assert fh.value == .1
         fh = template.FITSHeaderEntry(value='3E5', parse_value=True)
         assert fh.value == 3E5
+        fh = template.FITSHeaderEntry(value='1.1.1', parse_value=True)
+        assert fh.value == '1.1.1'
 
     def test_parse_extra_properties(self) :
         fh = template.FITSHeaderEntry(comment='comment1 {tt=tt}',
