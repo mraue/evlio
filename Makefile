@@ -10,5 +10,5 @@ all :
 	-for d in $(DIRS); do ($(ECHO) '--> Entering directory' $$d; cd $$d; $(MAKE) $(MFLAGS) ); done
 
 clean :
-	@$(ECHO) cleaning up
+	@$(ECHO) '==> Cleaning up'
 	-for d in $(DIRS); do ($(ECHO) '--> Entering directory' $$d; cd $$d; $(MAKE) clean ); done

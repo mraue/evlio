@@ -35,7 +35,7 @@ import os.path
 # Regular expressions
 
 # Extract key, value, and comment from FITS template file line
-_FITS_TEMPLATE_LINE_RE = re.compile(r'(?:^        (?P<is_comment>.+))?\s*(?P<key>[-_A-Za-z0-9\\#]+)?(?:(?:\s*=\s*|\s*)(?P<value>[^ \t\r\n\f/]+))?(?:\s*/(?P<comment>.*))?')
+_FITS_TEMPLATE_LINE_RE = re.compile(r'(?:^        (?P<is_comment>.+))?\s*(?P<key>[-_A-Za-z0-9\\#]+)?(?:(?:\s*=\s*|\s*)\'?(?P<value>[^ \t\r\n\f/\']+))?\'?(?:\s*/(?P<comment>.*))?')
 # Check FITS header keyword for being a table description
 _IS_TABLE_KW_RE = re.compile(r'(?P<table_kw>TTYPE|TFORM|TUNIT|TNULL|TSCAL|TZERO|TDISP|TBCOL|TDIM)(?P<auto_index>\#)?')
 # Parses extra properties from a FITS header comment

@@ -1,6 +1,9 @@
 XTENSION =   BINTABLE     / Binary table extension
 EXTNAME  =   DUMMY       / Extension name {mapto=v1, color=green}
 EVTVER = 1.3       / event list version number
+ASTR = 'Test'
+ANINT = 1234
+AFLOAT = 3.142E-5
 ttype# = EVENT_ID  / event number within the observation
 tform# = 1V
 ttype# = OBS_ID    / observation id number to cross reference an event to an obs.

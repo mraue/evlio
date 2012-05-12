@@ -90,11 +90,14 @@ class TestFITSFileTemplate() :
     """Test FITSFileTemplate class"""
     tpl = template.FITSFileTemplate(PATH + '/dummy.tpl', True)
     assert len(tpl.extensions) == 2
-    assert len(tpl.extensions[1].header) == 63
-    assert tpl.extensions[1].header[62].key == 'TUNIT20'
-    assert tpl.extensions[1].header[62].value == 'TeV'
+    assert len(tpl.extensions[1].header) == 66
+    assert tpl.extensions[1].header[65].key == 'TUNIT20'
+    assert tpl.extensions[1].header[65].value == 'TeV'
     assert tpl.extensions[1].header[1].options['mapto'] == 'v1'
     assert tpl.extensions[1].header[1].options['color'] == 'green'
-    
+    assert tpl.extensions[1].header[3].value == 'Test'
+    assert tpl.extensions[1].header[4].value == 1234
+    assert tpl.extensions[1].header[5].value == 3.142E-5
+
 #===========================================================================
 #===========================================================================

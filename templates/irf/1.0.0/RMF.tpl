@@ -4,7 +4,7 @@
 #
 #
 XTENSION= 'BINTABLE'           / binary table extension
-EXTNAME = 'MATRIX  '           / extension name
+EXTNAME = 'MATRIX'             / extension name
 BITPIX  =                    8 / array data type
 NAXIS   =                    0 / number of array dimensions
 PCOUNT  =                    0 / number of group parameters
