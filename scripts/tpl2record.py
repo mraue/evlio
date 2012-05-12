@@ -45,19 +45,19 @@ FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool'
                                     'U': 'unsigned short', 'J': 'int', 'V': 'unsigned int',
                                     'K': 'long', 'E': 'float', 'D': 'double', }
 DATA_REC_STRUCT = [
-    '  struct rdata_', ' {\n', '\n  };\n\n'
+    '  struct recdata_', ' {\n\n', '\n  };\n\n'
     ]
 FITS_REC_STRUCT = [
     '  struct FITSRecord',
     ''' : public FITSRecord {
 
     FITSRecord''',
-    '''(std::string filename, std::string templatename, int ntels=256)
-      : FITSRecord( filename, templatename, "''','''" ), nTels(ntels)
-    {\n\n''', '    }\n\n  rdata_', ' data;\n\n  };\n\n'
+    '''(std::string filename, std::string templatename)
+      : FITSRecord( filename, templatename, "''','''" )
+    {\n\n''', '    }\n\n  recdata_', ' data;\n\n  };\n\n'
     ]
 
-def tpl2record(input_file, output_file=None, loglevel='INFO') :
+def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='INFO') :
     # Configure logging
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):
@@ -73,6 +73,8 @@ def tpl2record(input_file, output_file=None, loglevel='INFO') :
     outstream = sys.stdout
     if output_file :
         outstream = open(output_file, 'w')
+
+    outstream.write(prestr)
 
     # Loop over extensions and print out FITSRecord structs
     ext_added = []
@@ -95,7 +97,7 @@ def tpl2record(input_file, output_file=None, loglevel='INFO') :
                 if (col.type_ and col.form and m and m.group('form') and
                     m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
                     initstr += ('      mapColumnToVar( "' + col.type_
-                                + '", data.' + col.type_.lower() + ');\n')
+                                + '" , data.' + col.type_.lower() + ' );\n')
                     memberstr += ('    ' + FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')]
                                   + ' ' + col.type_.lower() + ';')
                     # Add unit as comment
@@ -112,6 +114,10 @@ def tpl2record(input_file, output_file=None, loglevel='INFO') :
             outstream.write(FITS_REC_STRUCT[0] + ext.name + FITS_REC_STRUCT[1] + ext.name
                             + FITS_REC_STRUCT[2] + ext.name + FITS_REC_STRUCT[3] + initstr
                             + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5])
+    outstream.write(poststr)
+    if output_file :
+        outstream.close()
+    return
 
 #    for he in ext.header :
 #        if not evlio.template._IS_TABLE_KW_RE.match(he.key) :
