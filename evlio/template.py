@@ -196,7 +196,7 @@ class FITSDataTableColumn(object) :
 
     Attributes
     ----------
-    type_ : str
+    type\_ : str
         Corresponds to the TTYPE keyword of the table.
     form : str
         Corresponds to the TFORM keyword of the table.

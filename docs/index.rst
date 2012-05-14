@@ -6,14 +6,19 @@
 Welcome to evlio's documentation!
 =================================
 
+evlio is a library to read/write imaging atmospheric Cherenkov telescope
+(IACT) data in eventlist format. It is developed by Martin Raue and Karl
+Kosack.
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   development
+   fitsrecord
    evlio.template
    evlio.utils
+   development
 
 
 Indices and tables
