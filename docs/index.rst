@@ -15,6 +15,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   requirements
+   installation
+   overview
    fitsrecord
    evlio.template
    evlio.utils
