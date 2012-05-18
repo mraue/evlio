@@ -1,3 +1,32 @@
+#===========================================================================
+# Copyright (c) 2012, the evlio developers
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of the PyFACT developers nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE PYFACT DEVELOPERS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+#===========================================================================
+# Imports
+
 import sys
 import os
 import logging
@@ -38,14 +67,25 @@ import evlio.template
 #    *** The 64-bit integer format is experimental and is not 
 #        officially recognized in the FITS Standard.
 #        
+
+#===========================================================================
+# Regular expressions
+
 TABLE_FORMAT_RE = re.compile(r'(?P<veclen>[0-9]+)?(?P<form>[ALXBSIUJVKEDCM]|A[0-9]+)')
+
+#===========================================================================
+# Dictionaries and constants
 
 FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool',
                                     'B': 'unsigned char', 'S': 'char', 'I': 'short',
                                     'U': 'unsigned short', 'J': 'int', 'V': 'unsigned int',
                                     'K': 'long', 'E': 'float', 'D': 'double', }
+EXCLUDE_FROM_HEADER = ['XTENSION', 'EXTNAME', 'EVTVER', 'COMMENT', 'HISTORY']
 DATA_REC_STRUCT = [
     '  struct recdata_', ' {\n\n', '\n  };\n\n'
+    ]
+HEADER_REC_STRUCT = [
+    '  struct recheader_', ' {\n\n', '\n  };\n\n'
     ]
 FITS_REC_STRUCT = [
     '  struct FITSRecord',
@@ -54,9 +94,13 @@ FITS_REC_STRUCT = [
     FITSRecord''',
     '''(std::string filename, std::string templatename)
       : FITSRecord( filename, templatename, "''','''" )
-    {\n\n''', '    }\n\n  recdata_', ' data;\n\n  };\n\n'
+    {\n\n''', '    }\n\n    recdata_', ' data;\n    recheader_', ' header;\n', '\n  };\n\n'
     ]
 
+#===========================================================================
+# Functions and classes
+
+#---------------------------------------------------------------------------
 def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='INFO') :
     # Configure logging
     numeric_level = getattr(logging, loglevel.upper(), None)
@@ -100,34 +144,51 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                                 + '" , data.' + col.type_.lower() + ' );\n')
                     memberstr += ('    ' + FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')]
                                   + ' ' + col.type_.lower() + ';')
+                    if col.unit or hasattr(col, 'comment') :
+                        memberstr += ' // '
                     # Add unit as comment
                     if col.unit :
-                        memberstr += ' // [' + col.unit + ']'
+                        memberstr += '[' + col.unit + '] '
+                    # Add comment from TTYPE header keyword
+                    if hasattr(col, 'comment') :
+                         memberstr += col.comment.strip()
                     memberstr += '\n'
                 else :
                     logging.warning(
                         'Could not create record entry from column ' + col.type_
                         + ' in extension ' + ext.name
                         )
+            headerrecstr = ''
+            # Create recheader struct
+            for he in ext.header :
+                if (not evlio.template._IS_TABLE_KW_RE.match(he.key) and
+                    he.key.upper() not in EXCLUDE_FROM_HEADER) :
+                    type_ = r'char*'
+                    if type(he.value) is float :
+                        type_ = r'float'
+                    elif type(he.value) is int :
+                        type_ = r'int'
+                    headerrecstr += ('    ' + type_ + ' ' + he.key.lower() + ';')
+                    if he.comment :
+                        headerrecstr += ' // ' + he.comment
+                    headerrecstr += '\n'
+
+            # Write structs to file
             outstream.write(DATA_REC_STRUCT[0] + ext.name.lower() + DATA_REC_STRUCT[1]
                             + memberstr + DATA_REC_STRUCT[2])
+            outstream.write(HEADER_REC_STRUCT[0] + ext.name.lower() + HEADER_REC_STRUCT[1]
+                            + headerrecstr + HEADER_REC_STRUCT[2])
             outstream.write(FITS_REC_STRUCT[0] + ext.name + FITS_REC_STRUCT[1] + ext.name
                             + FITS_REC_STRUCT[2] + ext.name + FITS_REC_STRUCT[3] + initstr
-                            + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5])
+                            + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5]
+                            + ext.name.lower() + FITS_REC_STRUCT[6] + FITS_REC_STRUCT[7])
     outstream.write(poststr)
     if output_file :
         outstream.close()
     return
 
-#    for he in ext.header :
-#        if not evlio.template._IS_TABLE_KW_RE.match(he.key) :
-#            type_ = r'char*'
-#            if type(he.value) is float :
-#                type_ = r'float'
-#            elif type(he.value) is int :
-#                type_ = r'int'
-#            print type_, he.key.lower(), ';'
 
+#---------------------------------------------------------------------------
 if __name__ == '__main__' :
     # We should switch to argparse soon (python v2.7++)
     # http://docs.python.org/library/argparse.html#module-argparse
@@ -161,3 +222,5 @@ if __name__ == '__main__' :
     else :
         parser.print_help()
     
+#===========================================================================
+#===========================================================================

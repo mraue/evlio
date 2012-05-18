@@ -13,11 +13,14 @@ set( EXTRA_LIBS ${EXTRA_LIBS} ${CFITSIO_LIBRARIES} )
 
 add_subdirectory(FITSRecord)
 
+# Create output directory for records
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/records)
+
 # Create records include files, target will always be executed (ALL)
 add_custom_target(
     createrecords
     ALL
-    COMMAND mkdir ${PROJECT_BINARY_DIR}/records && python ${PROJECT_SOURCE_DIR}/scripts/create_records.py
+    COMMAND python ${PROJECT_SOURCE_DIR}/scripts/create_records.py
     ${PROJECT_SOURCE_DIR}/templates -o ${PROJECT_BINARY_DIR}/records
     COMMENT "Running python scripts ..."
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
