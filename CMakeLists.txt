@@ -12,7 +12,7 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/include)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 # Set this variable if you cfitsio is installed in a custom directory
-set(CFITSIO_ROOT_DIR /Users/mraue/Stuff/unix/cfitsio)
+# set(CFITSIO_ROOT_DIR /Users/mraue/Stuff/unix/cfitsio)
 
 find_package(CFITSIO REQUIRED)
 include_directories(${CFITSIO_INCLUDE_DIRS})
@@ -20,7 +20,7 @@ set( EXTRA_LIBS ${EXTRA_LIBS} ${CFITSIO_LIBRARIES} )
 
 add_subdirectory(FITSRecord)
 
-# Create records include files, target will always be executed (ALL)
+# Create data record include files
 add_custom_target(
     createrecords
     ALL
@@ -31,7 +31,7 @@ add_custom_target(
    )
 
 # Copy FITSRecord header files
-file (GLOB FITSREC_HEADER ${PROJECT_SOURCE_DIR}/FITSRecord/*.hh)
-foreach (file ${FITSREC_HEADER})
+file (GLOB FITSREC_HEADERS ${PROJECT_SOURCE_DIR}/FITSRecord/*.hh)
+foreach (file ${FITSREC_HEADERS})
     configure_file(${file} ${PROJECT_BINARY_DIR}/include/ COPYONLY)
 endforeach (file)
