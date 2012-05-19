@@ -56,12 +56,14 @@ def create_records(input_dir, output_dir, loglevel) :
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    input_dir = os.path.abspath(input_dir)
-    output_dir = os.path.abspath(output_dir)
+    if input_dir :
+        input_dir = os.path.abspath(input_dir)
+    if output_dir :
+        output_dir = os.path.abspath(output_dir)
 
     tpldict = evlio.utils.get_tpls_as_dict(input_dir)
 
-    recordstr = ''
+    recordstr= ''
 
     for tplname, verdict in tpldict.iteritems() :
         namespace = ''
@@ -83,9 +85,10 @@ def create_records(input_dir, output_dir, loglevel) :
                 logging.warning('Could not open index file ' + indextpl)
         recordstr += 'namespace FITSRec' + tplname.upper() + 'Current = ' + namespace + ';\n\n'
 
-    outfile = open(output_dir + '/Records.hh', 'w')
-    outfile.write(recordstr)
-    outfile.close()
+    if output_dir :
+        outfile = open(output_dir + '/Records.hh', 'w')
+        outfile.write(recordstr)
+        outfile.close()
 
 #---------------------------------------------------------------------------
 if __name__ == '__main__' :
