@@ -21,7 +21,7 @@ Code generation and compiling
 -----------------------------
 
 evlio is made using `cmake <http://www.cmake.org/>`_, which is best
-done from within a separate build directory below the main evlio
+done from within a separate build directory in the main evlio
 directory::
 
     $ mkdir build
@@ -40,3 +40,8 @@ you have to set `CFITSIO_ROOT_DIR` variable in the central
 The build products (i.e. libraries & includes) will be located in
 subdirectories of the `build` directory.
 
+To clear the installation, remove the content of the 'build/'
+directory::
+
+    $ cd build/
+    $ rm -r *
