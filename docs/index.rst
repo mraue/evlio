@@ -18,6 +18,7 @@ Contents:
    requirements
    installation
    overview
+   usage
    fitsrecord
    evlio.template
    evlio.utils
