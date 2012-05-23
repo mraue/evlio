@@ -90,6 +90,9 @@ HEADER_REC_STRUCT = [
 WRITE_HEADER_STR = [
     '    void writeFullHeader() {\n\n', '\n    }\n\n'
     ]
+READ_HEADER_STR = [
+    '    void readFullHeader() {\n\n', '\n    }\n\n'
+    ]
 FITS_REC_STRUCT = [
     '  struct ',
     '''Record : public FITSRecord {
@@ -161,7 +164,7 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                         'Could not create record entry from column ' + col.type_
                         + ' in extension ' + ext.name
                         )
-            headerrecstr, writeheaderstr, loadheaderstr = '', '', ''
+            headerrecstr, writeheaderstr, readheaderstr = '', '', ''
             # Create recheader struct
             for he in ext.header :
                 if (not evlio.template._IS_TABLE_KW_RE.match(he.key) and
@@ -177,6 +180,8 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                     headerrecstr += '\n'
                     writeheaderstr += ('      writeHeader( "' + he.key.upper() + '", header.' +
                                        he.key.lower() + ' );\n')
+                    readheaderstr += ('      readHeader( "' + he.key.upper() + '", header.' +
+                                      he.key.lower() + ' );\n')
 
             # Write structs to file
             outstream.write(DATA_REC_STRUCT[0] + ext.name.lower() + DATA_REC_STRUCT[1]
@@ -189,6 +194,7 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                             + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5]
                             + ext.name.lower() + FITS_REC_STRUCT[6]
                             + WRITE_HEADER_STR[0] + writeheaderstr + WRITE_HEADER_STR[1]
+                            + READ_HEADER_STR[0] + readheaderstr + READ_HEADER_STR[1]
                             + FITS_REC_STRUCT[7])
     outstream.write(poststr)
     if output_file :
