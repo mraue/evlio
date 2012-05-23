@@ -1,2 +1,2 @@
-\include ARF.tpl
-\include RMF.tpl
+\include arf.file.tpl
+\include rmf.file.tpl
