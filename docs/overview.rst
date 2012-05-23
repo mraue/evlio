@@ -4,17 +4,17 @@ Overview
 
 The purpose of the library is twofold:
 
-1. It should provide tools to read, write, and verify data in CTA-EVL
-format. Currently, this is implemented via FITSRecord (C++) but in
-principal several different codes and programming languages can be
-integrated. It should also provide extensive documentation and
-examples how these libraries can be integrated in existing code.
-
+1. The library should provide tools to read, write, and verify data in
+   CTA-EVL format. Currently, this is implemented via :doc:`fitsrecord` (C++)
+   but in principal several different codes and programming languages can
+   be integrated. It should also provide extensive documentation and
+   examples how these libraries can be integrated in existing code.
+ 
 2. The library should provide procedures and tools to automatically
-manage updates of the data format and generate the relevant code. This
-is currently implemented using `cfitsio FITS template files
-<http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node105.html>`_
-and a custom python parser.
+   manage updates of the eventlist data format and generate the relevant
+   code. This is currently implemented using `cfitsio FITS template files
+   <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node105.html>`_
+   and a custom python parser and module called ``evlio``.
 
 .. note::
     The current focus of evlio is on writing eventlist. Reading
@@ -49,16 +49,5 @@ The library is organized into several directories:
 ``docs/`` 
     The documentation is writen in `reStructured text format
     <http://sphinx.pocoo.org/rest.html#rst-primer>`_ and created using
-    `sphinx <http://sphinx.pocoo.org>`_.
-
---------
-Workflow
---------
-
-1. Create templates in fitsio template format and add them to properly
-   named subdirectories of the ``templates`` folder. Do not forget an
-   ``index.tpl`` file.
-2. Executed ``cmake``. This will
-
-   1. generate the required includes using pythons scripts and
-   2. compile the library
+    `sphinx <http://sphinx.pocoo.org>`_. The documentation can also be
+    found online under http://evlio.rtfd.org/ (hosted by http://readthedocs.org).
