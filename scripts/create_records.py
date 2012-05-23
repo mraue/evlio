@@ -29,6 +29,7 @@
 
 import sys
 import os
+import glob
 import logging
 import datetime
 
@@ -54,7 +55,7 @@ PRE_STR = [
 # Main
 
 #---------------------------------------------------------------------------
-def create_records(input_dir, output_dir, loglevel) :
+def create_records(tpl_dir, output_dir, loglevel) :
 
     # Configure logging
     numeric_level = getattr(logging, loglevel.upper(), None)
@@ -64,35 +65,42 @@ def create_records(input_dir, output_dir, loglevel) :
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
 
-    if input_dir :
-        input_dir = os.path.abspath(input_dir)
+    tpl_dir = os.path.abspath(tpl_dir)
     if output_dir :
         output_dir = os.path.abspath(output_dir)
 
-    tpldict = evlio.utils.get_tpls_as_dict(input_dir)
+    # Parse template directory structure
+    tpldict = evlio.utils.get_tpls_as_dict(tpl_dir)
 
     recordstr= ''
 
     for tplname, verdict in tpldict.iteritems() :
         namespace = ''
         for version, files in verdict.iteritems() :
-            indextpl = input_dir + '/' + tplname + '/' + version + '/index.tpl'
+            indir = tpl_dir + '/' + tplname + '/' + version
+            indextpl = indir + '/index.tpl'
             if os.path.isfile(indextpl) :
                 outfile = None
                 if output_dir :
                     outfile = output_dir + '/' + 'Record_' + tplname + '_' + version.replace('.','_') + '.hh'
                 namespace = 'FITSRec' + tplname.upper() + version.replace('.','')
                 prestr = PRE_STR[0] + namespace + PRE_STR[1]
+                tplfiles = glob.glob(indir + '/*.file.tpl')
+                if tplfiles :
+                    for f in tplfiles :
+                        dir_, file_ = os.path.split(f)
+                        id_ = file_.split('.')[0]
+                        prestr += '  const std::string ' + id_.upper() + '_FILE_TPL(\'' + f + '\');\n'
+                    prestr += '\n'
                 poststr = '}\n'
-                print indextpl
                 tpl2record.tpl2record(indextpl, outfile, prestr, poststr)
                 if outfile :
-                    recordstr += ('// Template  : ' + tplname + '\n' +
-                                  '// Version   : ' + version + '\n' +
-                                  '// Full path : ' + outfile + '\n\n')
+                    recordstr += ('// Template    : ' + tplname + '\n' +
+                                  '// Version     : ' + version + '\n' +
+                                  '// Record file : ' + outfile + '\n\n')
                     recordstr += '#include <' + os.path.basename(outfile) + '>\n'
             else :
-                logging.warning('Could not open index file ' + indextpl)
+                logging.warning('Could not find index file in ' + indir)
         recordstr += '\nnamespace FITSRec' + tplname.upper() + 'Current = ' + namespace + ';\n\n'
 
     if output_dir :
@@ -127,7 +135,7 @@ if __name__ == '__main__' :
 
     if len(args) == 1 :
         create_records(
-            input_dir=args[0],
+            tpl_dir=args[0],
             output_dir=options.output_dir,
             loglevel=options.loglevel
             )

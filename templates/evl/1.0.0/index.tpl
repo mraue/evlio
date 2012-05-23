@@ -1,2 +1,2 @@
-\include EventList.tpl
-\include MCEventList.tpl
+\include eventlist.file.tpl
+\include mceventlist.file.tpl
