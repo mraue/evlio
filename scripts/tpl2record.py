@@ -166,7 +166,7 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
             for he in ext.header :
                 if (not evlio.template._IS_TABLE_KW_RE.match(he.key) and
                     he.key.upper() not in EXCLUDE_FROM_HEADER) :
-                    type_ = r'char*'
+                    type_ = r'std::string'
                     if type(he.value) is float :
                         type_ = r'float'
                     elif type(he.value) is int :
