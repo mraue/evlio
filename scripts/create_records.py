@@ -30,6 +30,7 @@
 import sys
 import os
 import logging
+import datetime
 
 # Add script parent directory to python search path to get access to the evlio package
 sys.path.append(os.path.abspath(os.path.dirname(__file__) + '/..'))
@@ -40,7 +41,14 @@ import evlio.utils
 
 import tpl2record
 
-PRE_STR = ['#include <FITSRecord.hh>\n\nnamespace ', ' {\n\n']
+RECORDS_STR = ('//\n// Create by evlio version ' + evlio.__version__ + '\n'
+               + '// ' + datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S') + '\n//\n\n')
+
+PRE_STR = [
+    RECORDS_STR + 
+    '#include <FITSRecord.hh>\n\nnamespace ',
+    ' {\n\n'
+    ]
 
 #===========================================================================
 # Main
@@ -79,15 +87,17 @@ def create_records(input_dir, output_dir, loglevel) :
                 print indextpl
                 tpl2record.tpl2record(indextpl, outfile, prestr, poststr)
                 if outfile :
-                    recordstr += '// ' + tplname + ' ' + version + ' ' + outfile + '\n'
+                    recordstr += ('// Template  : ' + tplname + '\n' +
+                                  '// Version   : ' + version + '\n' +
+                                  '// Full path : ' + outfile + '\n\n')
                     recordstr += '#include <' + os.path.basename(outfile) + '>\n'
             else :
                 logging.warning('Could not open index file ' + indextpl)
-        recordstr += 'namespace FITSRec' + tplname.upper() + 'Current = ' + namespace + ';\n\n'
+        recordstr += '\nnamespace FITSRec' + tplname.upper() + 'Current = ' + namespace + ';\n\n'
 
     if output_dir :
         outfile = open(output_dir + '/Records.hh', 'w')
-        outfile.write(recordstr)
+        outfile.write(RECORDS_STR + recordstr)
         outfile.close()
 
 #---------------------------------------------------------------------------
