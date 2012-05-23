@@ -25,12 +25,12 @@ FITSRecord provide data structures (structs) which are mapped to a
 fits output file. The data is organized in FITS extensions with one
 struct per header and table data per extension. The different formats
 and format versions are kept in separate namespaces following the
-convention ``FITSRec<TPL><VERSION>``, e.g., ``FITSRecEVL100`` for the
+convention ``<TPL><VERSION>Records``, e.g., ``EVL100Records`` for the
 evl (eventlist) template version 1.0.0.
 
 For each pre defined FITS extension an FITSRecord class derived from
 the base FITSRecord exists. E.g. for the EVENTS extension there is the
-``FITSRecordEVENTS`` class. The class has a ``header`` and a ``data``
+``EVENTSRecord`` class. The class has a ``header`` and a ``data``
 member, which map to the corresponding header and table data structs,
 respectively.
 
@@ -54,7 +54,7 @@ the eventlist template.
    // Create FITSRecord for a specific extension
    // (here EVENTS extension of an eventlist file)
 
-   FITSRecEVLCurrent::FITSRecordEVENTS eventsrec( "output.fits", FITSRecEVLCurrent::EVENTLIST_FILE_TPL);
+   EVLRecordsCurrent::EVENTSRecord eventsrec( "output.fits", EVLRecordsCurrent::EVENTLIST_FILE_TPL);
 
    // Write header data
    // Please refer to the corresponding Record_<tpl>_<version>.hh file
