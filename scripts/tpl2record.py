@@ -91,11 +91,11 @@ WRITE_HEADER_STR = [
     '    void writeFullHeader() {\n\n', '\n    }\n\n'
     ]
 FITS_REC_STRUCT = [
-    '  struct FITSRecord',
-    ''' : public FITSRecord {
+    '  struct ',
+    '''Record : public FITSRecord {
 
-    FITSRecord''',
-    '''(std::string filename, std::string templatename)
+    ''',
+    '''Record (std::string filename, std::string templatename)
       : FITSRecord( filename, templatename, "''','''" )  {\n\n''',
     '\n    }\n\n    recdata_', ' data;\n    recheader_', ' header;\n\n', '  };\n\n'
     ]
@@ -183,8 +183,9 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                             + memberstr + DATA_REC_STRUCT[2])
             outstream.write(HEADER_REC_STRUCT[0] + ext.name.lower() + HEADER_REC_STRUCT[1]
                             + headerrecstr + HEADER_REC_STRUCT[2])
-            outstream.write(FITS_REC_STRUCT[0] + ext.name + FITS_REC_STRUCT[1] + ext.name
-                            + FITS_REC_STRUCT[2] + ext.name + FITS_REC_STRUCT[3] + initstr
+            outstream.write(FITS_REC_STRUCT[0] + ext.name.upper() + FITS_REC_STRUCT[1]
+                            + ext.name.upper()
+                            + FITS_REC_STRUCT[2] + ext.name.upper() + FITS_REC_STRUCT[3] + initstr
                             + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5]
                             + ext.name.lower() + FITS_REC_STRUCT[6]
                             + WRITE_HEADER_STR[0] + writeheaderstr + WRITE_HEADER_STR[1]

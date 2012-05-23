@@ -83,8 +83,9 @@ def create_records(tpl_dir, output_dir, loglevel) :
                 outfile = None
                 if output_dir :
                     outfile = output_dir + '/' + 'Record_' + tplname + '_' + version.replace('.','_') + '.hh'
-                namespace = 'FITSRec' + tplname.upper() + version.replace('.','')
+                namespace = tplname.upper() + version.replace('.','') + 'Records'
                 prestr = PRE_STR[0] + namespace + PRE_STR[1]
+                # Add links to file templates (<xx>.file.tpl)
                 tplfiles = glob.glob(indir + '/*.file.tpl')
                 if tplfiles :
                     for f in tplfiles :
@@ -101,9 +102,10 @@ def create_records(tpl_dir, output_dir, loglevel) :
                     recordstr += '#include <' + os.path.basename(outfile) + '>\n'
             else :
                 logging.warning('Could not find index file in ' + indir)
-        recordstr += '\nnamespace FITSRec' + tplname.upper() + 'Current = ' + namespace + ';\n\n'
+        recordstr += '\nnamespace ' + tplname.upper() + 'RecordsCurrent = ' + namespace + ';\n\n'
 
     if output_dir :
+        # Write central Records.hh file
         outfile = open(output_dir + '/Records.hh', 'w')
         outfile.write(RECORDS_STR + recordstr)
         outfile.close()
