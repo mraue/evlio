@@ -80,7 +80,7 @@ def create_records(input_dir, output_dir, loglevel) :
             if os.path.isfile(indextpl) :
                 outfile = None
                 if output_dir :
-                    outfile = output_dir + '/' + 'Records_' + tplname + '_' + version.replace('.','-') + '.hh'
+                    outfile = output_dir + '/' + 'Record_' + tplname + '_' + version.replace('.','_') + '.hh'
                 namespace = 'FITSRec' + tplname.upper() + version.replace('.','')
                 prestr = PRE_STR[0] + namespace + PRE_STR[1]
                 poststr = '}\n'
