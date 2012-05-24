@@ -140,6 +140,7 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
             ext_added.append(ext.name)
         # Parse FITS header into FITSDataTables
         ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
+        # Loop over table columns
         if ext.data.columns :
             initstr, memberstr = '', ''
             for col in ext.data.columns :

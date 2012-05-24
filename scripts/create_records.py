@@ -99,10 +99,10 @@ def create_records(tpl_dir, output_dir, loglevel) :
                     recordstr += ('// Template    : ' + tplname + '\n' +
                                   '// Version     : ' + version + '\n' +
                                   '// Record file : ' + outfile + '\n\n')
-                    recordstr += '#include <' + os.path.basename(outfile) + '>\n'
+                    recordstr += '#include <' + os.path.basename(outfile) + '>\n\n'
             else :
                 logging.warning('Could not find index file in ' + indir)
-        recordstr += '\nnamespace ' + tplname.upper() + 'RecordsCurrent = ' + namespace + ';\n\n'
+        recordstr += 'namespace ' + tplname.upper() + 'RecordsCurrent = ' + namespace + ';\n\n'
 
     if output_dir :
         # Write central Records.hh file

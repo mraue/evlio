@@ -88,16 +88,31 @@ class TestFITSExtension() :
 
 class TestFITSFileTemplate() :
     """Test FITSFileTemplate class"""
-    tpl = template.FITSFileTemplate(PATH + '/dummy.tpl', True)
-    assert len(tpl.extensions) == 2
-    assert len(tpl.extensions[1].header) == 66
-    assert tpl.extensions[1].header[65].key == 'TUNIT20'
-    assert tpl.extensions[1].header[65].value == 'TeV'
-    assert tpl.extensions[1].header[1].options['mapto'] == 'v1'
-    assert tpl.extensions[1].header[1].options['color'] == 'green'
-    assert tpl.extensions[1].header[3].value == 'Test'
-    assert tpl.extensions[1].header[4].value == 1234
-    assert tpl.extensions[1].header[5].value == 3.142E-5
+
+    def test_general(self) :
+        tpl = template.FITSFileTemplate(PATH + '/dummy.tpl', True)
+        assert len(tpl.extensions) == 2
+        assert len(tpl.extensions[1].header) == 66
+        assert tpl.extensions[1].header[65].key == 'TUNIT20'
+        assert tpl.extensions[1].header[65].value == 'TeV'
+        assert tpl.extensions[1].header[1].options['mapto'] == 'v1'
+        assert tpl.extensions[1].header[1].options['color'] == 'green'
+        assert tpl.extensions[1].header[3].value == 'Test'
+        assert tpl.extensions[1].header[4].value == 1234
+        assert tpl.extensions[1].header[5].value == 3.142E-5
+
+    def test_optional_columns(self) :
+        tpl = template.FITSFileTemplate(PATH + '/dummy2.tpl', True)
+        assert len(tpl.extensions[1].opt_header) == 2
+        assert tpl.extensions[1].opt_header[1][0].key == 'TTYPE13'
+        assert tpl.extensions[1].opt_header[1][0].value == 'AZ'
+        assert tpl.extensions[1].opt_header[1].auto_index_offset == 12
+        assert tpl.extensions[1].opt_header[1].id == 'extra2'
+        assert hasattr(tpl.extensions[1].opt_header[0], 'id') == False
+        dt = template.FITSDataTable(tpl.extensions[1].opt_header[1])
+        assert len(dt.columns) == 8
+        assert dt.columns[1].type_ == 'COREX'
+        assert dt.columns[2].form == '1E'
 
 #===========================================================================
 #===========================================================================

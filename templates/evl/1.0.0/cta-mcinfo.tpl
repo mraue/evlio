@@ -36,7 +36,7 @@ COMMENT each with one entry in the MCINFO table entry
 ttype# = MC_RUN_ID   / Monte-carlo run ID
 tform# = 1I   
 ttype# = MODE        / mode bitmask (bit1 = diffuse)
-tform# = 8x
+tform# = 8X
 ttype# = N_EVENTS    / number of thrown events in this group
 tform# = 1V
 ttype# = N_REUSED    / number of times showers were reused
