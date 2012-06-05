@@ -51,18 +51,28 @@ the eventlist template.
 
    ...
 
+   /////////////////////////////////////////////////////////////////////
    // Create FITSRecord for a specific extension
-   // (here EVENTS extension of an eventlist file)
+   //
 
-   EVLRecordsCurrent::EVENTSRecord eventsrec( "output.fits", EVLRecordsCurrent::EVENTLIST_FILE_TPL);
+   EVLRecordsCurrent::EVENTSRecord eventsrec( "output.fits",
+   				   	      EVLRecordsCurrent::EVENTLIST_FILE_TPL );
 
+   /////////////////////////////////////////////////////////////////////
    // Write header data
+   //
    // Please refer to the corresponding Record_<tpl>_<version>.hh file
    // for more details on the possible entries and entry formats
-   eventsrec.readFullHeader(); // Read previous or default values from file
+
+   // Read previous or default values from file
+   eventsrec.readFullHeader();
+
+   // Set header values
    eventsrec.header.telescop = "MAGIC";
    eventsrec.header.date_obs = "2008-03-23";   
    ...
+
+   // Write header values to file output.fits
    eventsrec.writeFullHeader();
 
    loop over your events {
@@ -72,7 +82,7 @@ the eventlist template.
            eventsrec.data.ra = ..
            eventsrec.data.dec = ..
            ...
-          // Write data row
+           // Write data row to file output.fits
  	   eventsrec.write();
     }
 
