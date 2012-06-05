@@ -9,3 +9,4 @@ evlio.utils
 .. automodule:: evlio.utils
    :members:
    :undoc-members:
+   :private-members:

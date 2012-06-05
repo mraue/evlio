@@ -9,3 +9,4 @@ evlio.template
 .. automodule:: evlio.template
    :members:
    :undoc-members:
+   :private-members:
