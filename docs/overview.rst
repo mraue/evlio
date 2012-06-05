@@ -16,11 +16,6 @@ The purpose of the library is twofold:
    <http://heasarc.gsfc.nasa.gov/docs/software/fitsio/c/c_user/node105.html>`_
    and a custom python parser and module called ``evlio``.
 
-.. note::
-    The current focus of evlio is on writing eventlist. Reading
-    eventlists is implement in FITSRecord, but no convenience
-    functions for, e.g., reading complete headers, are implemented yet.
-
 ----------------
 Directory layout
 ----------------
