@@ -59,7 +59,7 @@ the eventlist template.
    // Write header data
    // Please refer to the corresponding Record_<tpl>_<version>.hh file
    // for more details on the possible entries and entry formats
-
+   eventsrec.readFullHeader(); // Read previous or default values from file
    eventsrec.header.telescop = "MAGIC";
    eventsrec.header.date_obs = "2008-03-23";   
    ...

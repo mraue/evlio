@@ -31,14 +31,14 @@ tnull# = 0        / NULL value if value isn't known
 ttype# = DETX	  / coordinate relative to pointing direction
 tform# = 1E
 tunit# = deg
+#\optional
 ttype# = DETY	  / coordinate relative to pointing direction
-tform# = 1E
-tunit# = deg
 tform# = 1E
 tunit# = deg
 ttype# = ALT      / altitude of event
 tform# = 1E
 tunit# = deg
+#\optional extra2
 ttype# = AZ	  / azimuth of event
 tform# = 1E
 tunit# = deg
@@ -64,3 +64,4 @@ tunit# = TeV
 ttype# = ENERGY_ERR / error in shower reconstructed energy
 tform# = 1E
 tunit# = TeV
+

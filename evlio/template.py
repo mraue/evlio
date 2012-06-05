@@ -46,7 +46,7 @@ _ENTRY_VALUE_TYPE = re.compile(r'(?P<int>^[0-9]+$)?(?P<float>^[-+]?(?:^[0-9]+\.[
 #===========================================================================
 # Constants
 
-_MAX_FILE_RECURSION_DEPTH = 5
+_MAX_FILE_RECURSION_DEPTH = 10
 
 #===========================================================================
 # Functions & classes
@@ -130,8 +130,9 @@ class FITSHeaderEntry(object) :
 
 #---------------------------------------------------------------------------
 class FITSHeader(list) :
-
-    """Data class of a FITS file header."""
+    """
+    Data class of a FITS file header.
+    """
 
 #---------------------------------------------------------------------------
 class FITSData(object) :
@@ -167,6 +168,8 @@ class FITSDataTable(FITSData) :
         hd = super(FITSDataTable, self)._header_to_dict(header)
         hdkeys = hd.keys()
         idx = 1
+        if hasattr(header, 'auto_index_offset') :
+            idx += header.auto_index_offset
         while 1 :
             typestr = 'TTYPE' + str(idx)
             formstr = 'TFORM' + str(idx)
@@ -174,10 +177,10 @@ class FITSDataTable(FITSData) :
                 self.columns.append(
                     FITSDataTableColumn(
                         hd[typestr].value,
-                        hd[formstr].value
+                        hd[formstr].value.upper()
                         )
                     )
-                tdict = {'TUNIT':'unit', 'TNULL': 'null', 'TSCAL': 'scale', 'TZERO': 'zero',
+                tdict = {'TUNIT': 'unit', 'TNULL': 'null', 'TSCAL': 'scale', 'TZERO': 'zero',
                          'TDISP': 'disp', 'TBCOL': 'bcol', 'TDIM' : 'tdim'}
                 for key, prop in tdict.items() :
                     propstr = key + str(idx)
@@ -240,15 +243,19 @@ class FITSExtension(object) :
     header : list
         FITSHeader.
     data : FITSData(Table/Image)
+    opt_data : list
+        List with groups of optional data columns stored in FITSDataTable objects.
     """
 
-    def __init__(self, type_=None, name=None, bitpix=None, naxis=None, header=None, data=None) :
+    def __init__(self, type_=None, name=None, bitpix=None, naxis=None,
+                 header=None, data=None, opt_data=None) :
         self.type_ = type_
         self.name = name
         self.bitpix = bitpix
         self.naxis = naxis
         self.header = header
         self.data = data
+        self.opt_data = opt_data
 
     def init_from_header(self, header=None) :
         if header :
@@ -281,10 +288,13 @@ class FITSFileTemplate(object) :
         self.extensions = None
         self._auto_index = 0
         self._auto_index_key = None
+        self._in_opt_ext = False
         self._parse_options = parse_options
         self._file_recursion_depth = 0
         self._parse_file(filename)
-        [ext.init_from_header(ext.header) for ext in self.extensions]
+        for ext in self.extensions :
+            if ext.header :
+                ext.init_from_header(ext.header)
 
     def _parse_file(self, filename) :
         """Parses a FITS file template."""
@@ -306,6 +316,24 @@ class FITSFileTemplate(object) :
             if m.group('is_comment') :
                 # Empty key with comment, tbi
                 pass
+            elif key and key.find('#\\') == 0 :
+                # Extra options found
+                # These are optional header entries
+                if key.find('#\\optional') == 0 :
+                    if not self._in_opt_ext :
+                        self._in_opt_ext = True
+                    fh = FITSHeader()
+                    fh.optional = True
+                    if self._auto_index :
+                        fh.auto_index_offset = self._auto_index
+                    if  m.group('value') :
+                         fh.id = m.group('value')
+                    if hasattr(self.extensions[-1], 'opt_header') :
+                        self.extensions[-1].opt_header.append(fh)
+                    else :
+                        self.extensions[-1].opt_header = [fh]
+                else :
+                    logging.warning('Unkown extra parsing option: ' + key)
             elif key and len(key) > 0 and key[0] is not '#' :
                 value = m.group('value')
                 if key.find(r'\include') is not -1 and value != None :
@@ -338,6 +366,7 @@ class FITSFileTemplate(object) :
                         # Reset auto indexing on start of a new extension
                         self._auto_index = 0
                         self._auto_index_key = None
+                        self._in_opt_ext = False
                     # Are we dealing with table keywords
                     is_table_kw = _IS_TABLE_KW_RE.match(key)
                     if is_table_kw and is_table_kw.group('auto_index') :
@@ -348,12 +377,14 @@ class FITSFileTemplate(object) :
                             self._auto_index += 1
                         key = key.replace('#', str(self._auto_index))
                     # Add data to extension header
-                    self.extensions[-1].header.append(
-                        FITSHeaderEntry(key=key, value=value,
-                                        comment = m.group('comment'),
-                                        parse_value=True,
-                                        parse_options=self._parse_options)
-                        )
+                    fhe = FITSHeaderEntry(key=key, value=value,
+                                          comment = m.group('comment'),
+                                          parse_value=True,
+                                          parse_options=self._parse_options)
+                    if self._in_opt_ext :
+                        self.extensions[-1].opt_header[-1].append(fhe)
+                    else :
+                        self.extensions[-1].header.append(fhe)
                     logging.debug(str(key) + ' = ' +  str(m.group('value')) + ' / ' + str(m.group('comment')))
 
 #===========================================================================

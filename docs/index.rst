@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-evlio - an IACT eventlist library
-=================================
+evlio - an IACT eventlist data i/o library
+============================================
 
 evlio is a library to read/write imaging atmospheric Cherenkov
 telescope (IACT) data in eventlist (EVL) format and to manage format
