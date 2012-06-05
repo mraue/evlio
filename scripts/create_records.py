@@ -51,6 +51,22 @@ PRE_STR = [
     ' {\n\n'
     ]
 
+EXTRAREC_STR = '''
+struct ExtraRecord {
+
+  FITSRecord &baserec;
+
+  ExtraRecord( FITSRecord &baserec ) {
+
+     baserec = baserec;
+
+  }
+
+  virtual ~ExtraRecord(){;}
+
+};
+'''
+
 #===========================================================================
 # Main
 
@@ -108,6 +124,7 @@ def create_records(tpl_dir, output_dir, loglevel) :
         # Write central Records.hh file
         outfile = open(output_dir + '/Records.hh', 'w')
         outfile.write(RECORDS_STR + recordstr)
+        outfile.write(EXTRAREC_STR)
         outfile.close()
 
 #---------------------------------------------------------------------------

@@ -80,32 +80,154 @@ FITS_TABLE_FORMAT_TO_RECORD_TYPE = {'A': 'std::string', 'L': 'bool', 'X': 'bool'
                                     'B': 'unsigned char', 'S': 'char', 'I': 'short',
                                     'U': 'unsigned short', 'J': 'int', 'V': 'unsigned int',
                                     'K': 'long', 'E': 'float', 'D': 'double', }
-EXCLUDE_FROM_HEADER = ['XTENSION', 'EXTNAME', 'EVTVER', 'COMMENT', 'HISTORY']
-DATA_REC_STRUCT = [
-    '  struct recdata_', ' {\n\n', '\n  };\n\n'
-    ]
-HEADER_REC_STRUCT = [
-    '  struct recheader_', ' {\n\n', '\n  };\n\n'
-    ]
-WRITE_HEADER_STR = [
-    '    void writeFullHeader() {\n\n', '\n    }\n\n'
-    ]
-READ_HEADER_STR = [
-    '    void readFullHeader() {\n\n', '\n    }\n\n'
-    ]
-FITS_REC_STRUCT = [
-    '  struct ',
-    '''Record : public FITSRecord {
 
-    ''',
-    '''Record (std::string filename, std::string templatename)
-      : FITSRecord( filename, templatename, "''','''" )  {\n\n''',
-    '\n    }\n\n    recdata_', ' data;\n    recheader_', ' header;\n\n', '  };\n\n'
-    ]
+EXCLUDE_FROM_HEADER = ['XTENSION', 'EXTNAME', 'EVTVER', 'COMMENT', 'HISTORY']
+
+REC_STR_TPL = '''
+  struct recdata_{extlower} {{
+
+{recdata}
+  }};
+
+  struct recheader_{extlower} {{
+
+{recheader}
+  }};
+
+  struct {extupper}Record : public FITSRecord {{
+
+    recdata_{extlower} data;
+    recheader_{extlower} header;
+
+    {extupper}Record (std::string filename, std::string templatename)
+      : FITSRecord( filename, templatename, "{extupper}" )  {{
+
+{mapping}
+    }}
+
+    void writeFullHeader() {{
+
+{writeheader}
+    }}
+
+    void readFullHeader() {{
+
+{readheader}
+    }}
+
+  }};
+'''
+
+EXTRAREC_STR_TPL = '''
+  struct recdata_{extlower} {{
+
+{recdata}
+  }};
+
+  struct recheader_{extlower} {{
+
+{recheader}
+  }};
+
+  struct {extupper}ExtraRecord : public ExtraRecord {{
+
+    recdata_{extlower} optdata;
+    recheader_{extlower} optheader;
+
+    {extupper}ExtraRecord ( FITSRecord &baserec )
+      : ExtraRecord( baserec )  {{
+
+{mapping}
+    }}
+
+    void writeFullHeader() {{
+
+{writeheader}
+    }}
+
+    void readFullHeader() {{
+
+{readheader}
+    }}
+
+  }};
+'''
 
 #===========================================================================
 # Functions and classes
 
+#---------------------------------------------------------------------------
+def datacols2recstr(columns, extname=None, datastr='data', baserec='') :
+    initstr, memberstr = '', ''
+    for col in columns :
+        m = TABLE_FORMAT_RE.match(col.form)
+        if (col.type_ and col.form and m and m.group('form') and
+            m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
+
+            initstr += ('      ' +  baserec + 'mapColumnToVar( "' + col.type_
+                        + '" , ' + datastr + '.' + col.type_.lower() + ' );\n')
+            memberstr += ('    ' + FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')]
+                          + ' ' + col.type_.lower() + ';')
+
+            if col.unit or hasattr(col, 'comment') :
+                memberstr += ' // '
+            # Add unit as comment
+            if col.unit :
+                memberstr += '[' + col.unit + '] '
+            # Add comment from TTYPE header keyword
+            if hasattr(col, 'comment') :
+                 memberstr += col.comment.strip()
+            memberstr += '\n'
+
+        else :
+            logging.warning(
+                'Could not create record entry from column ' + col.type_
+                + ' in extension ' + extname
+                )
+    return (initstr, memberstr)
+
+#---------------------------------------------------------------------------
+def header2recstr(header, baserec='') :
+    headerrecstr, writeheaderstr, readheaderstr = '', '', ''
+    # Create recheader struct
+    for he in header :
+        if (not evlio.template._IS_TABLE_KW_RE.match(he.key) and
+            he.key.upper() not in EXCLUDE_FROM_HEADER) :
+            type_ = r'std::string'
+            if type(he.value) is float :
+                type_ = r'float'
+            elif type(he.value) is int :
+                type_ = r'int'
+            headerrecstr += ('    ' + type_ + ' ' + he.key.lower() + ';')
+            if he.comment :
+                headerrecstr += ' // ' + he.comment
+            headerrecstr += '\n'
+            writeheaderstr += ('      ' + baserec + 'writeHeader( "' + he.key.upper() + '", header.' +
+                               he.key.lower() + ' );\n')
+            readheaderstr += ('      ' + baserec + 'readHeader( "' + he.key.upper() + '", header.' +
+                              he.key.lower() + ' );\n')
+    return (headerrecstr, writeheaderstr, readheaderstr)
+
+#---------------------------------------------------------------------------
+def ext2recstr(header, name, recstrtpl, datastr='data', baserec='') :
+    # Parse FITS header into FITSDataTables
+    data = evlio.template.FITSDataTable(header, parse_options=True)
+    if data.columns :
+        initstr, memberstr = datacols2recstr(data.columns, name, datastr=datastr, baserec=baserec)
+        headerrecstr, writeheaderstr, readheaderstr = header2recstr(header, baserec=baserec)
+        return recstrtpl.format(
+            extlower=name.lower(),
+            extupper=name.upper(),
+            recdata=memberstr,
+            recheader=headerrecstr,
+            mapping=initstr,
+            writeheader=writeheaderstr,
+            readheader=readheaderstr
+            )
+    else :
+        logging.error('No data columns found in extension ' + name)
+        return ''
+        
 #---------------------------------------------------------------------------
 def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='INFO') :
     # Configure logging
@@ -117,7 +239,6 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
                         datefmt='%Y-%m-%d %H:%M:%S')
 
     # Open and parse FITS tpl file
-    #t = evlio.template.FITSFileTemplate(evlio.BASE_PATH + '/templates/evl/1.0.0/EventList.tpl', True)
     t = evlio.template.FITSFileTemplate(input_file, True)
 
     outstream = sys.stdout
@@ -138,65 +259,13 @@ def tpl2record(input_file, output_file=None, prestr='', poststr='', loglevel='IN
             continue
         else :
             ext_added.append(ext.name)
-        # Parse FITS header into FITSDataTables
-        ext.data = evlio.template.FITSDataTable(ext.header, parse_options=True)
-        # Loop over table columns
-        if ext.data.columns :
-            initstr, memberstr = '', ''
-            for col in ext.data.columns :
-                m = TABLE_FORMAT_RE.match(col.form)
-                if (col.type_ and col.form and m and m.group('form') and
-                    m.group('form') in FITS_TABLE_FORMAT_TO_RECORD_TYPE.keys()) :
-                    initstr += ('      mapColumnToVar( "' + col.type_
-                                + '" , data.' + col.type_.lower() + ' );\n')
-                    memberstr += ('    ' + FITS_TABLE_FORMAT_TO_RECORD_TYPE[m.group('form')]
-                                  + ' ' + col.type_.lower() + ';')
-                    if col.unit or hasattr(col, 'comment') :
-                        memberstr += ' // '
-                    # Add unit as comment
-                    if col.unit :
-                        memberstr += '[' + col.unit + '] '
-                    # Add comment from TTYPE header keyword
-                    if hasattr(col, 'comment') :
-                         memberstr += col.comment.strip()
-                    memberstr += '\n'
-                else :
-                    logging.warning(
-                        'Could not create record entry from column ' + col.type_
-                        + ' in extension ' + ext.name
-                        )
-            headerrecstr, writeheaderstr, readheaderstr = '', '', ''
-            # Create recheader struct
-            for he in ext.header :
-                if (not evlio.template._IS_TABLE_KW_RE.match(he.key) and
-                    he.key.upper() not in EXCLUDE_FROM_HEADER) :
-                    type_ = r'std::string'
-                    if type(he.value) is float :
-                        type_ = r'float'
-                    elif type(he.value) is int :
-                        type_ = r'int'
-                    headerrecstr += ('    ' + type_ + ' ' + he.key.lower() + ';')
-                    if he.comment :
-                        headerrecstr += ' // ' + he.comment
-                    headerrecstr += '\n'
-                    writeheaderstr += ('      writeHeader( "' + he.key.upper() + '", header.' +
-                                       he.key.lower() + ' );\n')
-                    readheaderstr += ('      readHeader( "' + he.key.upper() + '", header.' +
-                                      he.key.lower() + ' );\n')
 
-            # Write structs to file
-            outstream.write(DATA_REC_STRUCT[0] + ext.name.lower() + DATA_REC_STRUCT[1]
-                            + memberstr + DATA_REC_STRUCT[2])
-            outstream.write(HEADER_REC_STRUCT[0] + ext.name.lower() + HEADER_REC_STRUCT[1]
-                            + headerrecstr + HEADER_REC_STRUCT[2])
-            outstream.write(FITS_REC_STRUCT[0] + ext.name.upper() + FITS_REC_STRUCT[1]
-                            + ext.name.upper()
-                            + FITS_REC_STRUCT[2] + ext.name.upper() + FITS_REC_STRUCT[3] + initstr
-                            + FITS_REC_STRUCT[4] + ext.name.lower() + FITS_REC_STRUCT[5]
-                            + ext.name.lower() + FITS_REC_STRUCT[6]
-                            + WRITE_HEADER_STR[0] + writeheaderstr + WRITE_HEADER_STR[1]
-                            + READ_HEADER_STR[0] + readheaderstr + READ_HEADER_STR[1]
-                            + FITS_REC_STRUCT[7])
+        outstream.write(ext2recstr(ext.header, ext.name, REC_STR_TPL))
+        
+        # Deal with optional header / table columns
+        if hasattr(ext, 'opt_header') and ext.opt_header :
+            for header in ext.opt_header :
+                outstream.write(ext2recstr(header, header.id, EXTRAREC_STR_TPL, 'data', 'baserec.'))
     outstream.write(poststr)
     if output_file :
         outstream.close()
